@@ -1,0 +1,546 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Pulse. — CSM Portfolio Intelligence</title>
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;600&family=IBM+Plex+Sans:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+:root{--bg:#0e0f11;--bg2:#141518;--bg3:#1a1c20;--bg4:#212429;--ink:#e8e9ec;--ink2:#9196a0;--ink3:#52575f;--rule:#23262b;--rule2:#2d3138;--green:#3dd68c;--amber:#f5a623;--orange:#e8621a;--red:#e84040;--blue:#4a9eff}
+*{box-sizing:border-box;margin:0;padding:0}
+body{background:var(--bg);color:var(--ink);font-family:'IBM Plex Sans',sans-serif;font-size:14px;min-height:100vh}
+a{color:var(--blue);text-decoration:none}
+/* Header */
+.header{display:flex;align-items:center;justify-content:space-between;padding:16px 24px;border-bottom:1px solid var(--rule);background:var(--bg)}
+.logo{font-family:'IBM Plex Mono',monospace;font-size:18px;font-weight:600;background:#000;padding:4px 10px;letter-spacing:-0.5px}
+.logo span{color:#fff}
+.logo .dot{color:var(--red)}
+.header-meta{font-family:'IBM Plex Mono',monospace;font-size:11px;color:var(--ink3)}
+/* Tabs */
+.tabs{display:flex;border-bottom:1px solid var(--rule);background:var(--bg2);padding:0 24px}
+.tab{padding:12px 20px;cursor:pointer;font-size:13px;font-weight:500;color:var(--ink2);border-bottom:2px solid transparent;margin-bottom:-1px;transition:color 0.15s}
+.tab:hover{color:var(--ink)}
+.tab.active{color:var(--ink);border-bottom-color:var(--amber)}
+/* Content */
+.content{padding:24px;max-width:1400px;margin:0 auto}
+.panel{display:none}
+.panel.active{display:block}
+/* Stats strip */
+.stats-strip{display:grid;grid-template-columns:repeat(5,1fr);border:1px solid var(--rule);border-radius:8px;overflow:hidden;margin-bottom:24px}
+.stat-cell{background:#000;padding:20px;text-align:center;border-right:1px solid var(--rule)}
+.stat-cell:last-child{border-right:none}
+.stat-num{font-family:'IBM Plex Mono',monospace;font-size:28px;font-weight:600;margin-bottom:4px}
+.stat-num.green{color:var(--green)}
+.stat-num.amber{color:var(--amber)}
+.stat-num.red{color:var(--red)}
+.stat-num.orange{color:var(--orange)}
+.stat-num.blue{color:var(--blue)}
+.stat-label{font-family:'IBM Plex Mono',monospace;font-size:10px;text-transform:uppercase;color:var(--ink2);letter-spacing:0.5px}
+/* CSM Cards */
+.csm-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:16px;margin-bottom:24px}
+.csm-card{background:var(--bg2);border:1px solid var(--rule);border-radius:8px;padding:20px}
+.csm-card-header{display:flex;align-items:center;gap:12px;margin-bottom:16px}
+.csm-name{font-size:16px;font-weight:600}
+.csm-workload{font-family:'IBM Plex Mono',monospace;font-size:10px;padding:2px 6px;border-radius:3px;text-transform:uppercase}
+.workload-heavy{background:#e84040;color:#fff}
+.workload-normal{background:var(--amber);color:#000}
+.workload-light{background:var(--green);color:#000}
+.csm-stats{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:12px}
+.csm-stat{background:var(--bg3);border-radius:4px;padding:8px;text-align:center}
+.csm-stat-val{font-family:'IBM Plex Mono',monospace;font-size:16px;font-weight:600;color:var(--ink)}
+.csm-stat-val.red{color:var(--red)}
+.csm-stat-label{font-size:10px;color:var(--ink3);margin-top:2px}
+.csm-flags{display:flex;flex-wrap:wrap;gap:4px}
+/* Score ring */
+.score-ring-wrap{display:flex;flex-direction:column;align-items:center;gap:4px}
+.score-grade{font-family:'IBM Plex Mono',monospace;font-size:10px;font-weight:600;text-transform:uppercase}
+/* Tables */
+.table-wrap{background:var(--bg2);border:1px solid var(--rule);border-radius:8px;overflow:hidden;margin-bottom:24px}
+.table-title{padding:14px 16px;font-size:13px;font-weight:600;color:var(--ink2);border-bottom:1px solid var(--rule);font-family:'IBM Plex Mono',monospace;text-transform:uppercase;letter-spacing:0.5px;background:var(--bg2)}
+table{width:100%;border-collapse:collapse}
+th{background:var(--bg2);color:var(--ink2);font-family:'IBM Plex Mono',monospace;font-size:10px;text-transform:uppercase;letter-spacing:0.5px;padding:10px 12px;text-align:left;border-bottom:1px solid var(--rule2);cursor:pointer;user-select:none}
+th:hover{color:var(--ink)}
+td{padding:10px 12px;border-bottom:1px solid var(--rule2);font-size:13px;vertical-align:middle}
+tr:last-child td{border-bottom:none}
+tr.row-critical td{background:rgba(232,64,64,0.05)}
+tr.row-risk td{background:rgba(232,98,26,0.04)}
+tr.row-watch td{background:rgba(245,166,35,0.03)}
+tr:hover td{background:var(--bg4)!important}
+/* Badges */
+.badge{display:inline-block;font-family:'IBM Plex Mono',monospace;font-size:9px;font-weight:600;padding:2px 5px;border-radius:3px;text-transform:uppercase;margin:1px;white-space:nowrap}
+.badge-overdue{background:var(--red);color:#fff}
+.badge-no-close{background:var(--ink3);color:var(--ink)}
+.badge-blank-csm{background:var(--amber);color:#000}
+.badge-inactive{background:var(--rule2);color:var(--ink2)}
+.badge-high-value{background:var(--orange);color:#fff}
+.badge-watch{background:var(--amber);color:#000}
+/* Score pill */
+.score-pill{font-family:'IBM Plex Mono',monospace;font-size:11px;font-weight:600;padding:3px 8px;border-radius:4px;display:inline-block}
+.pill-healthy{background:rgba(61,214,140,0.15);color:var(--green)}
+.pill-watch{background:rgba(245,166,35,0.15);color:var(--amber)}
+.pill-risk{background:rgba(232,98,26,0.15);color:var(--orange)}
+.pill-critical{background:rgba(232,64,64,0.15);color:var(--red)}
+/* Score Calculator */
+.calc-wrap{background:var(--bg2);border:1px solid var(--rule);border-radius:8px;padding:24px;max-width:600px}
+.calc-title{font-family:'IBM Plex Mono',monospace;font-size:14px;font-weight:600;color:var(--ink2);margin-bottom:20px;text-transform:uppercase;letter-spacing:0.5px}
+.form-row{margin-bottom:16px}
+.form-label{font-family:'IBM Plex Mono',monospace;font-size:11px;color:var(--ink2);text-transform:uppercase;letter-spacing:0.5px;margin-bottom:6px;display:block}
+.form-input{width:100%;background:var(--bg3);border:1px solid var(--rule2);color:var(--ink);padding:8px 12px;border-radius:4px;font-family:'IBM Plex Mono',monospace;font-size:13px}
+.form-input:focus{outline:none;border-color:var(--amber)}
+.calc-result{background:#000;border-radius:8px;padding:20px;margin-top:20px;text-align:center}
+.calc-score{font-family:'IBM Plex Mono',monospace;font-size:48px;font-weight:600;margin-bottom:4px}
+.calc-grade{font-family:'IBM Plex Mono',monospace;font-size:14px;margin-bottom:16px}
+.dim-bars{display:flex;flex-direction:column;gap:6px;text-align:left}
+.dim-bar-row{display:flex;align-items:center;gap:8px}
+.dim-bar-label{font-family:'IBM Plex Mono',monospace;font-size:10px;color:var(--ink2);width:130px;flex-shrink:0}
+.dim-bar-track{flex:1;background:var(--rule2);border-radius:2px;height:6px;overflow:hidden}
+.dim-bar-fill{height:100%;border-radius:2px;transition:width 0.3s}
+.dim-bar-val{font-family:'IBM Plex Mono',monospace;font-size:10px;color:var(--ink2);width:30px;text-align:right}
+/* CSM section */
+.csm-section{margin-bottom:32px}
+.csm-section-header{display:flex;align-items:center;gap:12px;margin-bottom:12px;padding-bottom:10px;border-bottom:1px solid var(--rule)}
+.csm-section-name{font-size:16px;font-weight:600}
+.csm-section-meta{font-family:'IBM Plex Mono',monospace;font-size:11px;color:var(--ink2)}
+/* Section title */
+.section-title{font-family:'IBM Plex Mono',monospace;font-size:11px;text-transform:uppercase;letter-spacing:0.5px;color:var(--ink2);margin-bottom:12px;margin-top:24px}
+/* Sort arrow */
+th .sort-arrow{color:var(--ink3);margin-left:4px}
+th.sort-asc .sort-arrow::after{content:'▲'}
+th.sort-desc .sort-arrow::after{content:'▼'}
+th:not(.sort-asc):not(.sort-desc) .sort-arrow::after{content:'⇅';font-size:8px}
+/* Scrollable table */
+.table-scroll{overflow-x:auto}
+/* Alert banner */
+.alert{background:rgba(245,166,35,0.08);border:1px solid rgba(245,166,35,0.25);border-radius:6px;padding:12px 16px;margin-bottom:16px;font-size:13px;color:var(--amber)}
+.alert strong{font-family:'IBM Plex Mono',monospace}
+</style>
+</head>
+<body>
+<div class="header">
+  <div class="logo"><span>Pulse</span><span class="dot">.</span></div>
+  <div class="header-meta">CSM Portfolio Intelligence &nbsp;·&nbsp; Generated June 13, 2026 &nbsp;·&nbsp; 82 accounts</div>
+</div>
+<div class="tabs">
+  <div class="tab active" onclick="showTab('overview')">Overview</div>
+  <div class="tab" onclick="showTab('portfolios')">CSM Portfolios</div>
+  <div class="tab" onclick="showTab('pipeline')">Handover Pipeline</div>
+  <div class="tab" onclick="showTab('calculator')">Score Calculator</div>
+</div>
+<div class="content">
+
+<!-- OVERVIEW TAB -->
+<div id="tab-overview" class="panel active">
+  <div class="stats-strip" id="stats-strip"></div>
+  <div class="alert"><strong>⚠ Unassigned accounts:</strong> Bar-S FUD and Raptor Food have no CSM assigned. Both are overdue.</div>
+  <div class="section-title">CSM Portfolio Health</div>
+  <div class="csm-grid" id="csm-grid"></div>
+  <div class="section-title">Top 10 Most Overdue</div>
+  <div class="table-wrap">
+    <div class="table-scroll"><table id="tbl-overdue"></table></div>
+  </div>
+  <div class="section-title">Top 10 by Deal Value</div>
+  <div class="table-wrap">
+    <div class="table-scroll"><table id="tbl-value"></table></div>
+  </div>
+</div>
+
+<!-- PORTFOLIOS TAB -->
+<div id="tab-portfolios" class="panel">
+  <div id="portfolios-content"></div>
+</div>
+
+<!-- PIPELINE TAB -->
+<div id="tab-pipeline" class="panel">
+  <div class="section-title">All 82 Handover Accounts — Sortable</div>
+  <div class="table-wrap">
+    <div class="table-scroll"><table id="tbl-pipeline"></table></div>
+  </div>
+</div>
+
+<!-- CALCULATOR TAB -->
+<div id="tab-calculator" class="panel">
+  <div class="section-title">Interactive Health Score Calculator</div>
+  <div class="calc-wrap">
+    <div class="calc-title">Enter Account Signals</div>
+    <div class="form-row">
+      <label class="form-label">Account Name</label>
+      <input class="form-input" id="calc-name" type="text" placeholder="e.g. Elk Home">
+    </div>
+    <div class="form-row">
+      <label class="form-label">Days Since Last CRM Activity</label>
+      <input class="form-input" id="calc-days" type="number" value="7" min="0" max="365" oninput="runCalc()">
+    </div>
+    <div class="form-row">
+      <label class="form-label">Open Support Tickets</label>
+      <input class="form-input" id="calc-tickets" type="number" value="0" min="0" max="20" oninput="runCalc()">
+    </div>
+    <div class="form-row">
+      <label class="form-label">Days to Renewal (leave 0 if no date set)</label>
+      <input class="form-input" id="calc-renewal" type="number" value="0" min="0" oninput="runCalc()">
+    </div>
+    <div class="form-row">
+      <label class="form-label">NRR % (enter 100 if unknown)</label>
+      <input class="form-input" id="calc-nrr" type="number" value="100" min="0" max="200" oninput="runCalc()">
+    </div>
+    <div class="calc-result" id="calc-result"></div>
+  </div>
+</div>
+
+</div><!-- /content -->
+
+<script>
+// ─── DATA ───────────────────────────────────────────────────────────────────
+const TODAY = new Date('2026-06-13');
+const CSM_MAP = {
+  myra:     { id:'myra',     name:'Myra',     ownerId:'160019531' },
+  suv:      { id:'suv',      name:'Suv',      ownerId:'160019532' },
+  sunny:    { id:'sunny',    name:'Sunny',    ownerId:'2029107133' },
+  kanishka: { id:'kanishka', name:'Kanishka', ownerId:'164155144' },
+  blank:    { id:'blank',    name:'—',        ownerId:null }
+};
+
+// [id, name, csmKey, amount, closedate|null, lastModified]
+const RAW = [
+  [279913940718,"Regina Andrew","kanishka",3000,"2026-04-08","2026-06-08"],
+  [254785184448,"Crave Laundry Co. (3rd)","myra",3600,"2026-03-10","2026-04-24"],
+  [249633001183,"Cooper Classics","kanishka",9800,"2026-03-17","2026-06-03"],
+  [238362913521,"Crave Candle Co. (2nd)","myra",1200,"2026-01-23","2026-04-24"],
+  [237876597460,"Alteck Lighting","suv",3000,"2026-01-05","2026-06-07"],
+  [215677833935,"Will's Company","kanishka",12000,"2026-03-04","2026-06-08"],
+  [215930610365,"Pom Pom at Home (2nd)","myra",12000,"2026-02-04","2026-06-12"],
+  [188299062975,"Fireside Lodge (2nd)","suv",2400,"2026-01-13","2026-06-12"],
+  [164553964273,"Crave Candle Co.","myra",3600,"2025-10-24","2026-04-24"],
+  [163249979078,"RW Collective","suv",12600,"2025-12-02","2026-06-06"],
+  [162286628546,"Pantry Shelf Food","myra",4200,"2025-12-24","2026-06-11"],
+  [159746433783,"Turkana Valley Food","sunny",5400,"2026-01-19","2026-06-09"],
+  [160097955522,"Leftbank Art","myra",28800,"2025-10-06","2026-05-27"],
+  [160500774594,"David Shaw Designs","suv",12000,"2026-02-04","2026-06-11"],
+  [159861588721,"Bassett Mirror Company","suv",32400,"2025-10-10","2026-06-12"],
+  [160502571751,"Innovations (2nd impl)","sunny",25800,"2026-01-13","2026-06-11"],
+  [160502571750,"Elk Home","myra",62640,"2026-02-04","2026-06-09"],
+  [160332107494,"Tufan Rugs","kanishka",12000,null,"2026-06-12"],
+  [160443176637,"Rhea Designs","myra",10500,"2026-02-04","2026-06-10"],
+  [160498976501,"SageBrook","myra",20600,null,"2026-06-12"],
+  [159861588720,"Streamline Art","myra",7200,"2025-09-26","2026-06-13"],
+  [160474527472,"Beltlink","kanishka",9000,"2025-10-15","2026-06-03"],
+  [160097955521,"Crestview","sunny",41000,"2026-02-19","2026-06-12"],
+  [160437783236,"HiEnd Accents","myra",2400,null,"2026-06-09"],
+  [160430585536,"Melange","myra",1740,null,"2026-06-12"],
+  [159746433782,"Tremont Floral","suv",25000,null,"2026-06-11"],
+  [160069866209,"Tara Wilson Designs","myra",2160,null,"2026-06-06"],
+  [160498976500,"PortStyle","suv",17200,null,"2026-06-02"],
+  [160432382690,"Saro LifeStyle","myra",3600,null,"2026-06-09"],
+  [160500774593,"ZuoMod","myra",11100,null,"2026-04-26"],
+  [160446776019,"Dakota's Best Distributing","suv",19440,null,"2026-05-22"],
+  [160444974835,"Emdee","suv",9360,null,"2026-06-03"],
+  [160437783235,"Abra Lighting","kanishka",12000,null,"2026-06-10"],
+  [160472733405,"Getagadget","suv",19440,"2026-03-04","2026-06-12"],
+  [160470933238,"Couture Lamps","kanishka",8400,null,"2026-06-11"],
+  [160346502860,"TJ Trading","myra",3600,"2025-12-29","2026-06-08"],
+  [160346502859,"Karen Didion","suv",6600,null,"2026-06-05"],
+  [160444974834,"Antique Curiosities","kanishka",14400,null,"2026-06-05"],
+  [160430585535,"NCF","suv",10080,null,"2026-05-01"],
+  [160346502858,"Avandium Trading","suv",5760,null,"2026-05-05"],
+  [159771469527,"Zizo USA","kanishka",12240,null,"2026-06-03"],
+  [160444974833,"Pom Pom At Home","myra",15600,null,"2026-06-12"],
+  [160500774592,"Nasa Toys","kanishka",10800,null,"2026-06-11"],
+  [160432382689,"Orchid","kanishka",6000,null,"2026-06-08"],
+  [160446776018,"Trampoline","myra",3000,null,"2026-03-24"],
+  [160437783234,"American Brands LLC","suv",16560,null,"2026-06-05"],
+  [160437783233,"Toynk Toys LLC","myra",18000,null,"2026-06-12"],
+  [160069866208,"Fireside Lodge Furniture","suv",3000,null,"2026-06-12"],
+  [160097955520,"My Casual Space","kanishka",7656,null,"2026-06-08"],
+  [159771469525,"WorldFinds","kanishka",2520,null,"2026-06-09"],
+  [159771469526,"Old World Design","suv",16416,null,"2026-06-11"],
+  [160502571749,"Freyrs","kanishka",2580,null,"2026-06-03"],
+  [160474527471,"Arteriors Home","myra",60000,null,"2026-06-10"],
+  [160443176634,"Legend Accents","myra",4200,null,"2026-06-10"],
+  [160446776017,"Innovations","sunny",24000,null,"2026-06-11"],
+  [159861588719,"KCB","kanishka",5000,null,"2026-06-03"],
+  [160498976499,"Matr Boomie","suv",1500,null,"2026-06-01"],
+  [160472733404,"Foster's Point","sunny",27540,null,"2026-06-04"],
+  [160430585534,"Art Studio Company","suv",4200,null,"2026-06-12"],
+  [160432382688,"Copper Art/TI Design","kanishka",11000,null,"2026-06-09"],
+  [160069866207,"Viz Glass","suv",3000,null,"2026-04-24"],
+  [159746433780,"Signature Pillows","suv",12240,null,"2026-06-11"],
+  [159746433781,"DK Household Brands","suv",2520,null,"2026-05-26"],
+  [160443175673,"PD Home","myra",19720,null,"2026-06-12"],
+  [160430585533,"Mitchell Black","myra",4320,null,"2026-06-10"],
+  [160437783232,"JZ Products and Sales","myra",7200,null,"2026-06-04"],
+  [160500774591,"Paarizaat","suv",2400,null,"2026-06-03"],
+  [160446776016,"Howard Elliott Collection","sunny",22200,null,"2026-06-12"],
+  [160097955519,"Accent Decor","suv",25800,null,"2026-06-11"],
+  [160443175672,"Jaipur Living","myra",35100,null,"2026-06-12"],
+  [160470933236,"Bene Casa","kanishka",3000,null,"2026-06-06"],
+  [159746433779,"PV Textile USA","suv",15120,null,"2026-06-02"],
+  [160500774590,"Bedford Cottage","kanishka",3600,null,"2026-06-12"],
+  [160498976498,"Yafa Inc","suv",3000,null,"2026-05-27"],
+  [160474527470,"Briarwood Lane","myra",4200,null,"2026-05-12"],
+  [160432382687,"Spirit Food Group (SFG)","sunny",5400,null,"2026-06-09"],
+  [160470933237,"Luxe Decor","suv",9360,null,"2026-06-06"],
+  [160446770933,"Gallup","suv",14400,"2025-09-13","2026-06-09"],
+  [160332100313,"Ziapia","myra",8004,"2025-09-13","2026-05-12"],
+  [152760366825,"LR Home","myra",16128,"2026-01-12","2026-06-12"],
+  [152760365767,"Bar-S FUD","blank",19800,"2025-12-10","2026-06-03"],
+  [153397151440,"Raptor Food","blank",4200,"2025-09-19","2026-05-22"]
+];
+
+// ─── SCORING ─────────────────────────────────────────────────────────────────
+function daysBetween(d1, d2){ return Math.floor((d2-d1)/(1000*60*60*24)); }
+
+function computeScore({daysSinceActivity, tickets=0, hasFutureCall=false, daysToRenewal=0, nrrPct=100}){
+  const bd={};
+  const d=daysSinceActivity;
+  const a=d<=7?12:d<=14?10:d<=30?7:d<=60?4:d<=90?2:0; bd.crm=a;
+  const t=tickets===0?12:tickets===1?10:tickets===2?7:tickets===3?4:tickets<=5?2:0; bd.tickets=t;
+  const e=d<=7?12:d<=21?9:d<=45?5:d<=90?2:0; bd.email=e;
+  const md=d+5; const m=md<=14?12:md<=30?9:md<=60?5:md<=90?2:0; bd.meeting=m;
+  const c=hasFutureCall?(daysToRenewal<=30?10:daysToRenewal<=90?7:4):0; bd.futureCall=c;
+  bd.qbr=5;
+  bd.successPlan=0;
+  const nrr=nrrPct/100;
+  const nr=nrr>=1.15?20:nrr>=1.0?16:nrr>=0.85?6:nrr>0?2:10; bd.nrr=nr;
+  return {total:Math.min(a+t+e+m+c+5+0+nr,100), breakdown:bd};
+}
+
+function gradeOf(s){ return s>=80?'healthy':s>=60?'watch':s>=40?'risk':'critical'; }
+function gradeLabel(s){ return s>=80?'✓ On track':s>=60?'⚠ Watch':'!'+(s>=40?' At risk':' Escalate'); }
+function gradeColor(s){ return s>=80?'var(--green)':s>=60?'var(--amber)':s>=40?'var(--orange)':'var(--red)'; }
+
+// ─── BUILD DEALS ─────────────────────────────────────────────────────────────
+const DEALS = RAW.map(([id,name,csmKey,amount,closedate,lastMod])=>{
+  const lastModDate=new Date(lastMod);
+  const daysSince=daysBetween(lastModDate,TODAY);
+  const closeDateObj=closedate?new Date(closedate):null;
+  const daysToRenewal=closeDateObj?daysBetween(TODAY,closeDateObj):0;
+  const hasFutureCall=closeDateObj&&closeDateObj>TODAY;
+  const {total:score,breakdown}=computeScore({daysSinceActivity:daysSince,tickets:0,hasFutureCall,daysToRenewal:Math.max(0,daysToRenewal),nrrPct:100});
+  const scenarios=[];
+  if(!closedate) scenarios.push('NO_CLOSE_DATE');
+  else if(closeDateObj<=TODAY) scenarios.push('OVERDUE');
+  if(csmKey==='blank') scenarios.push('BLANK_CSM');
+  if(daysSince>60) scenarios.push('INACTIVE');
+  if(amount>15000&&score<60) scenarios.push('HIGH_VALUE_AT_RISK');
+  if(score<40) scenarios.push('ESCALATE');
+  const daysOverdue=closeDateObj&&closeDateObj<TODAY?daysBetween(closeDateObj,TODAY):null;
+  return {id,name,csmKey,csm:CSM_MAP[csmKey],amount,closedate:closeDateObj,lastMod:lastModDate,daysSince,score,grade:gradeOf(score),breakdown,scenarios,daysOverdue};
+});
+
+// ─── TAB LOGIC ───────────────────────────────────────────────────────────────
+function showTab(t){
+  document.querySelectorAll('.tab').forEach((el,i)=>{ el.classList.toggle('active',['overview','portfolios','pipeline','calculator'][i]===t); });
+  document.querySelectorAll('.panel').forEach(el=>el.classList.remove('active'));
+  document.getElementById('tab-'+t).classList.add('active');
+}
+
+// ─── SCORE RING SVG ───────────────────────────────────────────────────────────
+function scoreRingSVG(score){
+  const col=gradeColor(score);
+  const off=188.5*(1-score/100);
+  return `<svg viewBox="0 0 80 80" width="60" height="60"><circle cx="40" cy="40" r="30" fill="none" stroke="#23262b" stroke-width="6"/><circle cx="40" cy="40" r="30" fill="none" stroke="${col}" stroke-width="6" stroke-linecap="round" stroke-dasharray="188.5" stroke-dashoffset="${off.toFixed(1)}" transform="rotate(-90 40 40)"/><text x="40" y="45" text-anchor="middle" fill="${col}" font-size="16" font-family="IBM Plex Mono" font-weight="600">${score}</text></svg>`;
+}
+
+// ─── OVERVIEW ────────────────────────────────────────────────────────────────
+function renderOverview(){
+  const total=DEALS.length;
+  const totalVal=DEALS.reduce((s,d)=>s+d.amount,0);
+  const overdue=DEALS.filter(d=>d.scenarios.includes('OVERDUE')).length;
+  const noClose=DEALS.filter(d=>d.scenarios.includes('NO_CLOSE_DATE')).length;
+  const highVal=DEALS.filter(d=>d.amount>=15000).length;
+
+  document.getElementById('stats-strip').innerHTML=`
+    <div class="stat-cell"><div class="stat-num green">${total}</div><div class="stat-label">Total Accounts</div></div>
+    <div class="stat-cell"><div class="stat-num blue">$${(totalVal/1000).toFixed(0)}k</div><div class="stat-label">Pipeline Value</div></div>
+    <div class="stat-cell"><div class="stat-num red">${overdue}</div><div class="stat-label">Overdue</div></div>
+    <div class="stat-cell"><div class="stat-num amber">${noClose}</div><div class="stat-label">No Close Date</div></div>
+    <div class="stat-cell"><div class="stat-num orange">${highVal}</div><div class="stat-label">High Value ($15k+)</div></div>
+  `;
+
+  // CSM cards
+  const csms=['suv','myra','kanishka','sunny'];
+  const csmDeals=Object.fromEntries(csms.map(k=>[k,DEALS.filter(d=>d.csmKey===k)]));
+  const avgScore=deals=>deals.length?Math.round(deals.reduce((s,d)=>s+d.score,0)/deals.length):0;
+  let cardsHtml='';
+  for(const k of csms){
+    const ds=csmDeals[k];
+    const avg=avgScore(ds);
+    const ov=ds.filter(d=>d.scenarios.includes('OVERDUE')).length;
+    const hv=ds.filter(d=>d.scenarios.includes('HIGH_VALUE_AT_RISK')).length;
+    const wl=ds.length>20?'heavy':ds.length>9?'normal':'light';
+    const wlLabel=wl==='heavy'?'Heavy':wl==='normal'?'Normal':'Light';
+    const totalAmt=ds.reduce((s,d)=>s+d.amount,0);
+    cardsHtml+=`<div class="csm-card">
+      <div class="csm-card-header">
+        <div>${scoreRingSVG(avg)}</div>
+        <div>
+          <div class="csm-name">${CSM_MAP[k].name}</div>
+          <span class="csm-workload workload-${wl}">${wlLabel}</span>
+        </div>
+      </div>
+      <div class="csm-stats">
+        <div class="csm-stat"><div class="csm-stat-val">${ds.length}</div><div class="csm-stat-label">Accounts</div></div>
+        <div class="csm-stat"><div class="csm-stat-val${ov>5?' red':''}">$${(totalAmt/1000).toFixed(0)}k</div><div class="csm-stat-label">Value</div></div>
+        <div class="csm-stat"><div class="csm-stat-val${ov>0?' red':''}">${ov}</div><div class="csm-stat-label">Overdue</div></div>
+        <div class="csm-stat"><div class="csm-stat-val${hv>0?' red':''}">${hv}</div><div class="csm-stat-label">At Risk $</div></div>
+      </div>
+    </div>`;
+  }
+  document.getElementById('csm-grid').innerHTML=cardsHtml;
+
+  // Top 10 overdue
+  const overdueDeals=[...DEALS.filter(d=>d.daysOverdue!=null)].sort((a,b)=>b.daysOverdue-a.daysOverdue).slice(0,10);
+  document.getElementById('tbl-overdue').innerHTML=`
+    <thead><tr><th>Account</th><th>CSM</th><th>Days Overdue</th><th>Value</th><th>Score</th></tr></thead>
+    <tbody>${overdueDeals.map(d=>`<tr class="row-${d.grade}">
+      <td>${d.name}</td><td>${d.csm.name}</td>
+      <td><span style="color:var(--red);font-family:'IBM Plex Mono',monospace;font-weight:600">${d.daysOverdue}d</span></td>
+      <td style="font-family:'IBM Plex Mono',monospace">$${d.amount.toLocaleString()}</td>
+      <td><span class="score-pill pill-${d.grade}">${d.score}</span></td>
+    </tr>`).join('')}</tbody>
+  `;
+
+  // Top 10 by value
+  const valueSorted=[...DEALS].sort((a,b)=>b.amount-a.amount).slice(0,10);
+  document.getElementById('tbl-value').innerHTML=`
+    <thead><tr><th>Account</th><th>CSM</th><th>Value</th><th>Score</th><th>Flags</th></tr></thead>
+    <tbody>${valueSorted.map(d=>`<tr class="row-${d.grade}">
+      <td>${d.name}</td><td>${d.csm.name}</td>
+      <td style="font-family:'IBM Plex Mono',monospace;color:var(--ink)">$${d.amount.toLocaleString()}</td>
+      <td><span class="score-pill pill-${d.grade}">${d.score}</span></td>
+      <td>${badgesHtml(d.scenarios)}</td>
+    </tr>`).join('')}</tbody>
+  `;
+}
+
+function badgesHtml(scenarios){
+  return scenarios.map(s=>{
+    const map={OVERDUE:'badge-overdue OVERDUE',NO_CLOSE_DATE:'badge-no-close NO DATE',BLANK_CSM:'badge-blank-csm NO CSM',INACTIVE:'badge-inactive INACTIVE',HIGH_VALUE_AT_RISK:'badge-high-value HIGH VALUE',ESCALATE:'badge-overdue ESCALATE'};
+    const [cls,label]=map[s]?.split(' ')||['',''];
+    return cls?`<span class="badge ${cls}">${scenarios.indexOf(s)===0?'':''} ${label}</span>`:'';
+  }).join('');
+}
+
+// ─── PORTFOLIOS ───────────────────────────────────────────────────────────────
+function renderPortfolios(){
+  const csms=['myra','suv','kanishka','sunny'];
+  let html='';
+  for(const k of csms){
+    const ds=DEALS.filter(d=>d.csmKey===k);
+    const avg=Math.round(ds.reduce((s,d)=>s+d.score,0)/ds.length);
+    const totalVal=ds.reduce((s,d)=>s+d.amount,0);
+    const ov=ds.filter(d=>d.daysOverdue!=null).length;
+    html+=`<div class="csm-section">
+      <div class="csm-section-header">
+        ${scoreRingSVG(avg)}
+        <div>
+          <div class="csm-section-name">${CSM_MAP[k].name}</div>
+          <div class="csm-section-meta">${ds.length} accounts &nbsp;·&nbsp; $${totalVal.toLocaleString()} total &nbsp;·&nbsp; ${ov} overdue &nbsp;·&nbsp; avg score ${avg}</div>
+        </div>
+      </div>
+      <div class="table-wrap"><div class="table-scroll"><table>
+        <thead><tr><th>Account</th><th>Value</th><th>Close Date</th><th>Days Overdue</th><th>Last Activity</th><th>Score</th><th>Flags</th></tr></thead>
+        <tbody>
+        ${ds.sort((a,b)=>(b.daysOverdue||0)-(a.daysOverdue||0)).map(d=>`<tr class="row-${d.grade}">
+          <td>${d.name}</td>
+          <td style="font-family:'IBM Plex Mono',monospace">$${d.amount.toLocaleString()}</td>
+          <td style="font-family:'IBM Plex Mono',monospace;font-size:12px;color:${d.daysOverdue?'var(--red)':'var(--ink2)'}">
+            ${d.closedate?d.closedate.toISOString().slice(0,10):'—'}
+          </td>
+          <td style="font-family:'IBM Plex Mono',monospace;color:var(--red)">
+            ${d.daysOverdue?d.daysOverdue+'d':'—'}
+          </td>
+          <td style="font-family:'IBM Plex Mono',monospace;font-size:12px;color:${d.daysSince>30?'var(--amber)':'var(--ink2)'}">
+            ${d.daysSince}d ago
+          </td>
+          <td><span class="score-pill pill-${d.grade}">${d.score}</span></td>
+          <td>${badgesHtml(d.scenarios)}</td>
+        </tr>`).join('')}
+        </tbody>
+      </table></div></div>
+    </div>`;
+  }
+  document.getElementById('portfolios-content').innerHTML=html;
+}
+
+// ─── PIPELINE TABLE ───────────────────────────────────────────────────────────
+let pipelineSortCol='daysOverdue', pipelineSortDir=-1;
+function renderPipeline(){
+  const sorted=[...DEALS].sort((a,b)=>{
+    const av=a[pipelineSortCol]??( pipelineSortCol==='daysOverdue'?-1:0);
+    const bv=b[pipelineSortCol]??( pipelineSortCol==='daysOverdue'?-1:0);
+    return typeof av==='string'?av.localeCompare(bv)*pipelineSortDir:(bv-av)*pipelineSortDir*-1;
+  });
+  const cols=[
+    {key:'name',label:'Account'},
+    {key:'csm',label:'CSM'},
+    {key:'amount',label:'Value'},
+    {key:'closedate',label:'Close Date'},
+    {key:'daysOverdue',label:'Days Overdue'},
+    {key:'daysSince',label:'Last Activity'},
+    {key:'score',label:'Score'},
+    {key:'scenarios',label:'Flags'}
+  ];
+  document.getElementById('tbl-pipeline').innerHTML=`
+    <thead><tr>${cols.map(c=>`<th onclick="sortPipeline('${c.key}')" class="${pipelineSortCol===c.key?'sort-'+(pipelineSortDir>0?'asc':'desc'):''}">${c.label}<span class="sort-arrow"></span></th>`).join('')}</tr></thead>
+    <tbody>${sorted.map(d=>`<tr class="row-${d.grade}">
+      <td>${d.name}</td>
+      <td>${d.csm.name}</td>
+      <td style="font-family:'IBM Plex Mono',monospace">$${d.amount.toLocaleString()}</td>
+      <td style="font-family:'IBM Plex Mono',monospace;font-size:12px;color:${d.daysOverdue?'var(--red)':'var(--ink2)'}">
+        ${d.closedate?d.closedate.toISOString().slice(0,10):'—'}
+      </td>
+      <td style="font-family:'IBM Plex Mono',monospace;color:var(--red)">${d.daysOverdue?d.daysOverdue+'d':'—'}</td>
+      <td style="font-family:'IBM Plex Mono',monospace;color:${d.daysSince>30?'var(--amber)':'var(--ink2)'}">${d.daysSince}d ago</td>
+      <td><span class="score-pill pill-${d.grade}">${d.score}</span></td>
+      <td>${badgesHtml(d.scenarios)}</td>
+    </tr>`).join('')}</tbody>
+  `;
+}
+function sortPipeline(col){
+  if(pipelineSortCol===col) pipelineSortDir*=-1;
+  else{ pipelineSortCol=col; pipelineSortDir=-1; }
+  renderPipeline();
+}
+
+// ─── CALCULATOR ───────────────────────────────────────────────────────────────
+function runCalc(){
+  const days=parseInt(document.getElementById('calc-days').value)||0;
+  const tickets=parseInt(document.getElementById('calc-tickets').value)||0;
+  const renewal=parseInt(document.getElementById('calc-renewal').value)||0;
+  const nrrPct=parseFloat(document.getElementById('calc-nrr').value)||100;
+  const hasFutureCall=renewal>0;
+  const {total:score,breakdown}=computeScore({daysSinceActivity:days,tickets,hasFutureCall,daysToRenewal:renewal,nrrPct});
+  const col=gradeColor(score);
+  const grade=gradeOf(score);
+  const label=gradeLabel(score);
+  const dims=[
+    {label:'CRM Activity',val:breakdown.crm,max:12},
+    {label:'Support Tickets',val:breakdown.tickets,max:12},
+    {label:'Email Recency',val:breakdown.email,max:12},
+    {label:'Meeting Cadence',val:breakdown.meeting,max:12},
+    {label:'Future Call',val:breakdown.futureCall,max:10},
+    {label:'QBR Recency',val:breakdown.qbr,max:10},
+    {label:'Success Plan',val:breakdown.successPlan,max:12},
+    {label:'NRR Signal',val:breakdown.nrr,max:20},
+  ];
+  document.getElementById('calc-result').innerHTML=`
+    <div class="calc-score" style="color:${col}">${score}</div>
+    <div class="calc-grade" style="color:${col}">${label}</div>
+    <div class="dim-bars">
+      ${dims.map(d=>`<div class="dim-bar-row">
+        <div class="dim-bar-label">${d.label}</div>
+        <div class="dim-bar-track"><div class="dim-bar-fill" style="width:${Math.round(d.val/d.max*100)}%;background:${gradeColor(Math.round(d.val/d.max*100))}"></div></div>
+        <div class="dim-bar-val">${d.val}/${d.max}</div>
+      </div>`).join('')}
+    </div>
+  `;
+}
+
+// ─── INIT ─────────────────────────────────────────────────────────────────────
+renderOverview();
+renderPortfolios();
+renderPipeline();
+runCalc();
+</script>
+</body>
+</html>
